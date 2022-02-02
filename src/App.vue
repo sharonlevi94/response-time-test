@@ -3,57 +3,59 @@
     <h1>Response Time test & record Application</h1>
     <div>
       <button class="buttons" @click="startScan()">Start Test</button>
-      <button class="buttons" @click="scanOn = !scanOn">Stop Test</button>
+      <button class="buttons" @click="scanOn = false">Stop Test</button>
     </div>
     <line-chart
-      v-for="(sourceResult, key) of timeResults"
-      :key="key" :data="sourceResult"
+      v-for="(sourceResult, key) of results"
+      :key="key"
+      :data="sourceResult"
       :title="sources[key]"/>
   </div>
 </template>
 
 <script>
 import API from './middleware/api/index'
-import localStorageDriver from './middleware/local-storage/index'
+import { mapActions, mapState } from 'vuex'
 
 export default {
   name: 'App',
-  data(){
-    return{
+  data () {
+    return {
       scanOn: false,
-      timeResults:[],
+      timeResults: [],
       sources: [
-        'google.com',
-        'facebook.com',
-        'twitter.com',
-        'ynet.com',
-        'amazon.com'
+        'Google',
+        'Facebook',
+        'Twitter',
+        'Ynet',
+        'Amazon'
       ]
     }
   },
-  methods:{
-    async startScan(){
+  computed: mapState('results', ['results']),
+  methods: {
+    ...mapActions('results', ['updateResults', 'getResults']),
+    async startScan () {
       this.scanOn = true
-      while(this.scanOn){
-        for(let i= 0 ; i < this.sources.length ; i++){
+      while (this.scanOn) {
+        for (let i = 0; i < this.sources.length; i++) {
           let responseTime = await API.read(this.sources[i])
           let time = new Date().getTime()
           this.timeResults[i][time] = responseTime
-
           console.log(this.timeResults)
-          localStorageDriver.updateTimes(this.sources[i],this.timeResults[i])
-
-          for(let i= 0 ; i < this.sources.length ; i++){
-            this.timeResults[i] = localStorageDriver.getObjects(this.sources[i])
-          }
+          this.updateResults({
+            results: this.timeResults,
+            type: this.sources[i],
+            times: this.timeResults[i]
+          })
         }
+        this.getResults(this.sources)
       }
     }
   },
   created () {
-    for(let i= 0 ; i < this.sources.length ; i++){
-      this.timeResults.push(localStorageDriver.getObjects(this.sources[i]))
-    }
+    this.getResults(this.sources)
+    this.timeResults = this.results
   }
 }
 </script>

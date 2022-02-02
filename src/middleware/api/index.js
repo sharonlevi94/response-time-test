@@ -4,10 +4,10 @@ const axios = require('axios'),
 axiosTime(axios)
 
 export default {
-  async read(url){
+  async read(domain){
     try{
-      console.log(url)
-      const response = await axios.get(`https://${url}`)
+      console.log(domain)
+      const response = await axios.get(`https://${domain}.com`)
       console.log(response.timings.elapsedTime)
       return JSON.stringify(response.timings.elapsedTime)
     }
